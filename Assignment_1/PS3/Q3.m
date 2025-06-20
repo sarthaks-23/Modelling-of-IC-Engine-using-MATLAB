@@ -1,0 +1,27 @@
+s = [1,1;-1,1];
+f = @point;
+solutions = zeros(size(s));
+for i = 1:size(s,1)
+    solutions(i,:) = fsolve(f,s(i,:));
+end
+disp(solutions);
+%% Checking it by plotting the curve
+% Circle
+theta = linspace(0,2*pi,100);
+x_c = 2 * cos(theta);
+y_c = 2 * sin(theta);
+
+% Parabola
+x_p = linspace(-2.5,2.5,100);
+y_p = x_p.^2-1;
+
+figure;
+hold on;
+plot(x_c,y_c,'r','LineWidth',1.5,'DisplayName', 'Circle: x^2 + y^2 = 4');
+plot(x_p,y_p,'b','LineWidth',1.5,'DisplayName', 'parabola: x^2 - y = 1');
+plot(solutions(:,1),solutions(:,2),'ko','MarkerFaceColor','k','DisplayName', 'Intersection points');
+grid on;
+xlabel('x');
+ylabel('y');
+legend;
+hold off;
