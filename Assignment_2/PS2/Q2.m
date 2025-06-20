@@ -1,0 +1,104 @@
+gamma = 1.35;
+P1 = 110; %kPa
+T1 = 400; %K
+T3 = 2800; %K
+bore = 0.09;
+stroke = 0.1;
+rod = 1.4;
+CR = 8.5;
+V_swept = (3.14/4)*bore^2*stroke;
+V_clearance = V_swept/(CR-1);
+%% STATE CALCULATIONS WITHOUT PISTON KINEMATICS
+V2 = V_clearance;
+V1 = V_swept + V_clearance;
+
+% 1->2 Isentropic Compression
+P2 = P1*(V1/V2)^(gamma);
+T2 = T1*(V1/V2)^(gamma-1);
+
+% 2->3 Constant VOlume Heat Addition
+P3 = P2*T3/T2;
+V3 = V2;
+
+% 3->4 Isentropic Expansion
+V4 = V1;
+P4 = P3*(V3/V4)^(gamma);
+T4 = T3*(V3/V4)^(gamma-1);
+
+% Efficiency of the Otto Cycle
+eta = (1-1/CR^(gamma-1))*100; %in %
+
+%% STATE CALCULATIONS USING PISTON KINEMATICS
+
+%Geometric Parameters
+theta = linspace(0,180,100);
+
+%Using piston kinematics function to find compression volume
+V_compression = piston_kinematics(bore,stroke,rod,CR,theta);
+V_expansion = flip(V_compression);
+
+% 1->2 Isentropic Compression
+P_compression = P1*(V1./V_compression).^(gamma);
+T_compression = T1*(V1./V_compression).^(gamma-1);
+
+% 3->4 Expansion Process
+P_expansion = P3 * (V3 ./ V_expansion).^gamma;
+T_expansion = T3 * (V3 ./ V_expansion).^(gamma-1);
+
+%% P-V Diagrams
+figure;
+hold on;
+
+% Without Piston Kinematics
+plot([V1 V2 V3 V4 V1], [P1 P2 P3 P4 P1], 'r--o', 'LineWidth',1.5,'DisplayName', 'Without Piston Kinematics');
+
+% With Piston Kinematics
+plot(V_compression, P_compression, 'b','LineWidth',1.5,'DisplayName', 'Compression (Piston Kinematics)');
+plot(V_expansion, P_expansion, 'g', 'LineWidth',1.5, 'DisplayName', 'Expansion (Piston Kinematics)');
+
+xlabel('Volume (m^3)');
+ylabel('Pressure (kPa)');
+title('P-V Diagram of Otto Cycle');
+legend;
+grid on;
+hold off;
+
+%% Efficiency vs CR
+cr = [7 9 11];
+cr_d = linspace(1,15,100);
+efficiency = @(x) 1-(1./(x).^(gamma-1));
+figure;
+hold on;
+grid on;
+plot(cr,efficiency(cr),'bo','LineWidth',1.5,'DisplayName','Compression Ratio (r=7,9,11) relation with efficiency');
+plot(cr_d,efficiency(cr_d),'r-','LineWidth',1.5,'DisplayName','Compression ratio vs thermal efficiency curve');
+legend;
+xlabel('Compression Ratio (r)');
+ylabel('Thermal Efficiency (η)');
+
+%% Generating Results
+fprintf('Without Piston Kinematics[Pressure, Volume, Temperature] at state 1 : [%.3fkPa, %.5fm^3, %.3fK]\n',P1,V1,T1);
+fprintf('Without Piston Kinematics[Pressure, Volume, Temperature] at state 2 : [%.3fkPa, %.5fm^3, %.3fK]\n',P2,V2,T2);
+fprintf('Without Piston Kinematics[Pressure, Volume, Temperature] at state 3 : [%.3fkPa, %.5fm^3, %.3fK]\n',P3,V3,T3);
+fprintf('Without Piston Kinematics[Pressure, Volume, Temperature] at state 4 : [%.3fkPa, %.5fm^3, %.3fK]\n',P4,V4,T4);
+fprintf('Thermal Efficiency of the otto cycle: %.3f%%\n',eta);
+fprintf('With Piston Kinematics [Pressure, Volume, Temperature] at state 1 : [%.3fkPa, %.5fm^3, %.3fK]\n',P_compression(100),V_compression(100),T_compression(100));
+fprintf('With Piston Kinematics [Pressure, Volume, Temperature] at state 2 : [%.3fkPa, %.5fm^3, %.3fK]\n',P_compression(1),V_compression(1),T_compression(1));
+fprintf('With Piston Kinematics [Pressure, Volume, Temperature] at state 3 : [%.3fkPa, %.5fm^3, %.3fK]\n',P_expansion(100),V_expansion(100),T_expansion(100));
+fprintf('With Piston Kinematics [Pressure, Volume, Temperature] at state 4 : [%.3fkPa, %.5fm^3, %.3fK]\n',P_expansion(1),V_expansion(1),T_expansion(1));
+
+%% Observations and Inferences
+% 1.
+% We could see that the PV curve with piston kinematics is more
+% effective than without kinematics. It provides a more accurate
+% thermodynamic data then the latter.
+
+% 2.
+% The plot of compression ratio with efficiency, shows that the efficiency
+% increases with increase in CR, (And is more suitable in range of 7 to 11).
+
+
+
+
+
+
